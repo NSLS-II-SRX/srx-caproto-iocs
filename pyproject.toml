@@ -30,7 +30,11 @@ classifiers = [
   "Typing :: Typed",
 ]
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+  "caproto",
+  "h5py",
+  "numpy",
+]
 
 [project.optional-dependencies]
 test = [
@@ -38,6 +42,9 @@ test = [
   "pytest-cov >=3",
 ]
 dev = [
+  "ipython",
+  "pre-commit",
+  "pylint",
   "pytest >=6",
   "pytest-cov >=3",
 ]
@@ -121,7 +128,7 @@ extend-select = [
   "RET",      # flake8-return
   "RUF",      # Ruff-specific
   "SIM",      # flake8-simplify
-  "T20",      # flake8-print
+  # "T20",      # flake8-print
   "UP",       # pyupgrade
   "YTT",      # flake8-2020
   "EXE",      # flake8-executable
