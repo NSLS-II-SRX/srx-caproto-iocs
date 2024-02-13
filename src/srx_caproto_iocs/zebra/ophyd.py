@@ -5,8 +5,10 @@ from ophyd import Device, EpicsSignal, EpicsSignalRO
 
 
 class ZebraWithCaprotoIOC(Device):
-    write_dir = Cpt(EpicsSignal, "write_dir")
-    file_name = Cpt(EpicsSignal, "file_name")
-    full_file_path = Cpt(EpicsSignalRO, "full_file_path")
+    """An ophyd Device which works with the Zebra caproto extension IOC."""
+
+    write_dir = Cpt(EpicsSignal, "write_dir", string=True)
+    file_name = Cpt(EpicsSignal, "file_name", string=True)
+    full_file_path = Cpt(EpicsSignalRO, "full_file_path", string=True)
     frame_num = Cpt(EpicsSignal, "frame_num")
-    ioc_stage = Cpt(EpicsSignal, "ioc_stage")
+    ioc_stage = Cpt(EpicsSignal, "stage", string=True)

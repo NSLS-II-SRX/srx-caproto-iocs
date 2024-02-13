@@ -8,7 +8,7 @@ from ..base import GenericSaveIOC
 
 
 class ZebraSaveIOC(GenericSaveIOC):
-    """Zebra Caproto Save IOC"""
+    """Zebra caproto save IOC."""
 
 
 if __name__ == "__main__":

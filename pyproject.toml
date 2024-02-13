@@ -35,6 +35,7 @@ dependencies = [
   "h5py",
   "numpy",
   "ophyd",
+  "pyepics",  # does not work with 'setuptools' version higher than v66.1.1
 ]
 
 [project.optional-dependencies]
