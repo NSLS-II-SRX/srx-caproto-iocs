@@ -1,0 +1,12 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: 2024.01.24
+_src_path: gh:scientific-python/cookie
+backend: hatch
+email: mrakitin@bnl.gov
+full_name: Brookhaven National Laboratory
+license: BSD
+org: NSLS-II-SRX
+project_name: srx-caproto-iocs
+project_short_description: Caproto IOCs for the NSLS-II SRX beamline
+url: https://github.com/NSLS-II-SRX/srx-caproto-iocs
+vcs: true
