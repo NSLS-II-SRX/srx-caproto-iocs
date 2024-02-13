@@ -85,7 +85,10 @@ log_cli_level = "INFO"
 testpaths = [
   "tests",
 ]
-
+markers = [
+    "hardware: marks tests as requiring the hardware IOC to be available/running (deselect with '-m \"not hardware\"')",
+    "tiled: marks tests as requiring tiled",
+]
 
 [tool.coverage]
 run.source = ["srx_caproto_iocs"]

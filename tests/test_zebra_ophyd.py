@@ -9,7 +9,8 @@ from ophyd.status import SubscriptionStatus
 from srx_caproto_iocs.utils import now
 
 
-# TODO: use pytest.mark.parametrize to implement many use cases.
+@pytest.mark.hardware()
+@pytest.mark.usefixtures("_caproto_ioc")
 @pytest.mark.parametrize("date_template", ["%Y/%m/", "%Y/%m/%d", "mydir/%Y/%m/%d"])
 def test_zebra_ophyd_caproto(zebra_ophyd_caproto, date_template):
     with tempfile.TemporaryDirectory() as tmpdirname:
