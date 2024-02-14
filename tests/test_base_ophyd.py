@@ -11,7 +11,7 @@ from srx_caproto_iocs.utils import now
 
 @pytest.mark.cloud_friendly()
 @pytest.mark.parametrize("date_template", ["%Y/%m/", "%Y/%m/%d", "mydir/%Y/%m/%d"])
-def test_zebra_ophyd_caproto(caproto_ioc, zebra_ophyd_caproto, date_template):
+def test_base_ophyd_templates(base_caproto_ioc, base_ophyd_device, date_template):
     with tempfile.TemporaryDirectory() as tmpdirname:
         date = now(as_object=True)
         write_dir_root = Path(tmpdirname)
@@ -21,7 +21,7 @@ def test_zebra_ophyd_caproto(caproto_ioc, zebra_ophyd_caproto, date_template):
 
         file_template = "scan_{num:06d}_{uid}.hdf5"
 
-        dev = zebra_ophyd_caproto
+        dev = base_ophyd_device
         dev.write_dir.put(dir_template)
         dev.file_name.put(file_template)
 

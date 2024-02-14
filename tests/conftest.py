@@ -10,18 +10,23 @@ from pprint import pformat
 import netifaces
 import pytest
 
-from srx_caproto_iocs.zebra.ophyd import ZebraWithCaprotoIOC
+from srx_caproto_iocs.base import OphydDeviceWithCaprotoIOC
+
+CAPROTO_PV_PREFIX = "BASE:{{Dev:Save1}}:"
+OPHYD_PV_PREFIX = CAPROTO_PV_PREFIX.replace("{{", "{").replace("}}", "}")
 
 
 @pytest.fixture()
-def zebra_ophyd_caproto():
-    dev = ZebraWithCaprotoIOC("XF:05IDD-ES:1{Dev:Zebra2}:", name="zebra_ophyd_caproto")
+def base_ophyd_device():
+    dev = OphydDeviceWithCaprotoIOC(
+        OPHYD_PV_PREFIX, name="ophyd_device_with_caproto_ioc"
+    )
     yield dev
     dev.ioc_stage.put("unstaged")
 
 
 @pytest.fixture(scope="session")
-def caproto_ioc(wait=3):
+def base_caproto_ioc(wait=3):
     first_three = ".".join(socket.gethostbyname(socket.gethostname()).split(".")[:3])
     broadcast = f"{first_three}.255"
 
@@ -44,10 +49,7 @@ def caproto_ioc(wait=3):
         except Exception as e:
             print(f"{interface = }: exception:\n  {e}")
 
-    command = (
-        sys.executable
-        + " -m srx_caproto_iocs.zebra.caproto_ioc --prefix=XF:05IDD-ES:1{{Dev:Zebra2}}: --list-pvs"
-    )
+    command = f"{sys.executable} -m srx_caproto_iocs.base --prefix={CAPROTO_PV_PREFIX} --list-pvs"
     print(
         f"\nStarting caproto IOC in via a fixture using the following command:\n\n  {command}\n"
     )

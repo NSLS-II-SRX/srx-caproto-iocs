@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import textwrap
 import threading
 import uuid
 from enum import Enum
 from pathlib import Path
 
 from caproto import ChannelType
-from caproto.server import PVGroup, pvproperty
+from caproto.server import PVGroup, pvproperty, run, template_arg_parser
+from ophyd import Component as Cpt
+from ophyd import Device, EpicsSignal, EpicsSignalRO
 
 from .utils import now
 
@@ -25,7 +28,7 @@ class StageStates(Enum):
     STAGED = "staged"
 
 
-class GenericSaveIOC(PVGroup):
+class CaprotoSaveIOC(PVGroup):
     """Generic Caproto Save IOC"""
 
     write_dir = pvproperty(
@@ -150,3 +153,33 @@ class GenericSaveIOC(PVGroup):
 
             response = {"success": success, "error_message": error_message}
             response_queue.put(response)
+
+
+class OphydDeviceWithCaprotoIOC(Device):
+    """An ophyd Device which works with the base caproto extension IOC."""
+
+    write_dir = Cpt(EpicsSignal, "write_dir", string=True)
+    file_name = Cpt(EpicsSignal, "file_name", string=True)
+    full_file_path = Cpt(EpicsSignalRO, "full_file_path", string=True)
+    frame_num = Cpt(EpicsSignal, "frame_num")
+    ioc_stage = Cpt(EpicsSignal, "stage", string=True)
+
+
+def check_args(parser_, split_args_):
+    """Helper function to process caproto CLI args."""
+    parsed_args = parser_.parse_args()
+    prefix = parsed_args.prefix
+    if not prefix:
+        parser_.error("The 'prefix' argument must be specified.")
+
+    ioc_opts, run_opts = split_args_(parsed_args)
+    return ioc_opts, run_opts
+
+
+if __name__ == "__main__":
+    parser, split_args = template_arg_parser(
+        default_prefix="", desc=textwrap.dedent(CaprotoSaveIOC.__doc__)
+    )
+    ioc_options, run_options = check_args(parser, split_args)
+    ioc = CaprotoSaveIOC(**ioc_options)
+    run(ioc.pvdb, **run_options)
