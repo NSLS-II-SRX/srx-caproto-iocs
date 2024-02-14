@@ -68,4 +68,6 @@ def caproto_ioc(wait=3):
 
     std_out, std_err = p.communicate()
     std_out = std_out.decode()
-    print(std_out)
+    sep = "=" * 80
+    print(f"STDOUT:\n{sep}\n{std_out}")
+    print(f"STDERR:\n{sep}\n{std_err}")
