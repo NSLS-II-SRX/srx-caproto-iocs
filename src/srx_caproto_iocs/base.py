@@ -4,7 +4,7 @@ import textwrap
 import threading
 import time as ttime
 import uuid
-from enum import Enum, auto
+from enum import Enum
 from pathlib import Path
 
 import numpy as np
@@ -20,8 +20,8 @@ from .utils import now, save_hdf5
 class AcqStatuses(Enum):
     """Enum class for acquisition statuses."""
 
-    IDLE = auto()
-    ACQUIRING = auto()
+    IDLE = "idle"
+    ACQUIRING = "acquiring"
 
 
 class StageStates(Enum):
@@ -82,10 +82,10 @@ class CaprotoSaveIOC(PVGroup):
         self._request_queue = None
         self._response_queue = None
 
-    _queue = pvproperty(value=0, doc="A PV to facilitate threading-based queue")
+    queue = pvproperty(value=0, doc="A PV to facilitate threading-based queue")
 
-    @_queue.startup
-    async def _queue(self, instance, async_lib):
+    @queue.startup
+    async def queue(self, instance, async_lib):
         """The startup behavior of the count property to set up threading queues."""
         # pylint: disable=unused-argument
         self._request_queue = async_lib.ThreadsafeQueue()

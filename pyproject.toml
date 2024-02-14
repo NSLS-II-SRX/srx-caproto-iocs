@@ -45,6 +45,7 @@ test = [
 ]
 dev = [
   "ipython",
+  "nexpy",
   "pre-commit",
   "pylint",
   "pytest >=6",
