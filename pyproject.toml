@@ -31,7 +31,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-  "caproto",
+  "caproto[complete]",
   "h5py",
   "numpy",
   "ophyd",

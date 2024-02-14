@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import os
+import socket
 import subprocess
 import sys
 import time as ttime
+from pprint import pformat
 
+import netifaces
 import pytest
 
 from srx_caproto_iocs.zebra.ophyd import ZebraWithCaprotoIOC
@@ -18,16 +22,34 @@ def zebra_ophyd_caproto():
 
 @pytest.fixture(scope="session")
 def caproto_ioc(wait=3):
+    first_three = ".".join(socket.gethostbyname(socket.gethostname()).split(".")[:3])
+    broadcast = f"{first_three}.255"
+
+    print(f"{broadcast = }")
+
     env = {
-        "EPICS_CAS_BEACON_ADDR_LIST": "127.0.0.1",
+        "EPICS_CAS_BEACON_ADDR_LIST": os.getenv("EPICS_CA_ADDR_LIST", broadcast),
         "EPICS_CAS_AUTO_BEACON_ADDR_LIST": "no",
     }
+
+    print(f"Updating env with:\n\n{pformat(env)}\n")
+    os.environ.update(env)
+
+    interfaces = netifaces.interfaces()
+    print(f"{interfaces = }")
+    for interface in interfaces:
+        addrs = netifaces.ifaddresses(interface)
+        try:
+            print(f"{interface = }: {pformat(addrs[netifaces.AF_INET])}")
+        except Exception as e:
+            print(f"{interface = }: exception:\n  {e}")
+
     command = (
         sys.executable
         + " -m srx_caproto_iocs.zebra.caproto_ioc --prefix=XF:05IDD-ES:1{{Dev:Zebra2}}: --list-pvs"
     )
     print(
-        f"Starting caproto IOC in via a fixture using the following command:\n\n  {command}\n"
+        f"\nStarting caproto IOC in via a fixture using the following command:\n\n  {command}\n"
     )
     p = subprocess.Popen(
         command.split(),
@@ -35,7 +57,7 @@ def caproto_ioc(wait=3):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         shell=False,
-        env=env,
+        env=os.environ,
     )
     print(f"Wait for {wait} seconds...")
     ttime.sleep(wait)
