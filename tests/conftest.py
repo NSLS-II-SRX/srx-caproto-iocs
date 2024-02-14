@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 import time as ttime
 
 import pytest
@@ -16,20 +17,33 @@ def zebra_ophyd_caproto():
 
 
 @pytest.fixture(scope="session")
-def _caproto_ioc():
-    command = 'EPICS_CAS_BEACON_ADDR_LIST=127.0.0.1 EPICS_CAS_AUTO_BEACON_ADDR_LIST=no python -m srx_caproto_iocs.zebra.caproto_ioc --prefix="XF:05IDD-ES:1{{Dev:Zebra2}}:" --list-pvs'
+def caproto_ioc(wait=3):
+    env = {
+        "EPICS_CAS_BEACON_ADDR_LIST": "127.0.0.1",
+        "EPICS_CAS_AUTO_BEACON_ADDR_LIST": "no",
+    }
+    command = (
+        sys.executable
+        + " -m srx_caproto_iocs.zebra.caproto_ioc --prefix=XF:05IDD-ES:1{{Dev:Zebra2}}: --list-pvs"
+    )
+    print(
+        f"Starting caproto IOC in via a fixture using the following command:\n\n  {command}\n"
+    )
     p = subprocess.Popen(
         command.split(),
         start_new_session=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        shell=True,
+        shell=False,
+        env=env,
     )
-    ttime.sleep(2.0)
+    print(f"Wait for {wait} seconds...")
+    ttime.sleep(wait)
 
-    yield
+    yield p
+
+    p.terminate()
 
     std_out, std_err = p.communicate()
     std_out = std_out.decode()
     print(std_out)
-    p.terminate()

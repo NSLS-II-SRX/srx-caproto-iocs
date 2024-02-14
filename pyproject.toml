@@ -88,6 +88,7 @@ testpaths = [
 markers = [
     "hardware: marks tests as requiring the hardware IOC to be available/running (deselect with '-m \"not hardware\"')",
     "tiled: marks tests as requiring tiled",
+    "cloud_friendly: marks tests to be able to execute in the CI in the cloud",
 ]
 
 [tool.coverage]
