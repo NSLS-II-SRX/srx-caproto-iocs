@@ -2,23 +2,26 @@ from __future__ import annotations
 
 import textwrap
 import threading
+import time as ttime
 import uuid
-from enum import Enum
+from enum import Enum, auto
 from pathlib import Path
 
+import numpy as np
 from caproto import ChannelType
+from caproto.ioc_examples.mini_beamline import no_reentry
 from caproto.server import PVGroup, pvproperty, run, template_arg_parser
 from ophyd import Component as Cpt
 from ophyd import Device, EpicsSignal, EpicsSignalRO
 
-from .utils import now
+from .utils import now, save_hdf5
 
 
 class AcqStatuses(Enum):
     """Enum class for acquisition statuses."""
 
-    IDLE = "Done"
-    ACQUIRING = "Count"
+    IDLE = auto()
+    ACQUIRING = auto()
 
 
 class StageStates(Enum):
@@ -60,11 +63,22 @@ class CaprotoSaveIOC(PVGroup):
         value=StageStates.UNSTAGED.value,
         enum_strings=[x.value for x in StageStates],
         dtype=ChannelType.ENUM,
-        doc="Stage/unstage the detector",
+        doc="Stage/unstage the device",
     )
 
-    def __init__(self, *args, **kwargs):
+    acquire = pvproperty(
+        value=AcqStatuses.IDLE.value,
+        enum_strings=[x.value for x in AcqStatuses],
+        dtype=ChannelType.ENUM,
+        doc="Acquire signal to save a dataset.",
+    )
+
+    def __init__(self, *args, update_rate=10.0, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self._update_rate = update_rate
+        self._update_period = 1.0 / update_rate
+
         self._request_queue = None
         self._response_queue = None
 
@@ -128,6 +142,42 @@ class CaprotoSaveIOC(PVGroup):
 
         return False
 
+    def _get_current_dataset(self):
+        return np.random.random((10, 20))
+
+    @acquire.putter
+    @no_reentry
+    async def acquire(self, instance, value):
+        """The acquire method to perform an individual acquisition of a data point."""
+        if value != AcqStatuses.ACQUIRING.value:
+            return False
+
+        if (
+            instance.value in [True, AcqStatuses.ACQUIRING.value]
+            and value == AcqStatuses.ACQUIRING.value
+        ):
+            print(
+                f"The device is already acquiring. Please wait until the '{AcqStatuses.IDLE.value}' status."
+            )
+            return True
+
+        # Delegate saving the resulting data to a blocking callback in a thread.
+        payload = {
+            "filename": self.full_file_path.value,
+            "data": self._get_current_dataset(),
+            "uid": str(uuid.uuid4()),
+            "timestamp": ttime.time(),
+        }
+
+        await self._request_queue.async_put(payload)
+        response = await self._response_queue.async_get()
+
+        if response["success"]:
+            # Increment the counter only on a successful saving of the file.
+            await self.frame_num.write(self.frame_num.value + 1)
+
+        return False
+
     @staticmethod
     def saver(request_queue, response_queue):
         """The saver callback for threading-based queueing."""
@@ -136,7 +186,7 @@ class CaprotoSaveIOC(PVGroup):
             filename = received["filename"]
             data = received["data"]
             try:
-                # save_hdf5(fname=filename, data=data)
+                save_hdf5(fname=filename, data=data)
                 print(f"{now()}: saved {data.shape} data into:\n  {filename}")
 
                 success = True
