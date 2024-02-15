@@ -26,7 +26,7 @@ def base_ophyd_device():
 
 
 @pytest.fixture(scope="session")
-def base_caproto_ioc(wait=3):
+def base_caproto_ioc(wait=5):
     first_three = ".".join(socket.gethostbyname(socket.gethostname()).split(".")[:3])
     broadcast = f"{first_three}.255"
 

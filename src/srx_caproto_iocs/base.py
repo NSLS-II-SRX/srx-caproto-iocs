@@ -7,12 +7,13 @@ import uuid
 from enum import Enum
 from pathlib import Path
 
-import numpy as np
+import skimage.data
 from caproto import ChannelType
 from caproto.ioc_examples.mini_beamline import no_reentry
 from caproto.server import PVGroup, pvproperty, run, template_arg_parser
 from ophyd import Component as Cpt
 from ophyd import Device, EpicsSignal, EpicsSignalRO
+from ophyd.status import SubscriptionStatus
 
 from .utils import now, save_hdf5
 
@@ -142,14 +143,18 @@ class CaprotoSaveIOC(PVGroup):
 
         return False
 
-    def _get_current_dataset(self):
-        return np.random.random((10, 20))
+    def _get_current_dataset(self, frame):
+        dataset = skimage.data.cells3d().sum(axis=1)
+        return dataset[frame, ...]
 
     @acquire.putter
     @no_reentry
     async def acquire(self, instance, value):
         """The acquire method to perform an individual acquisition of a data point."""
-        if value != AcqStatuses.ACQUIRING.value:
+        if (
+            value != AcqStatuses.ACQUIRING.value
+            # or self.stage.value not in [True, StageStates.STAGED.value]
+        ):
             return False
 
         if (
@@ -161,12 +166,16 @@ class CaprotoSaveIOC(PVGroup):
             )
             return True
 
+        await self.acquire.write(AcqStatuses.ACQUIRING.value)
+
         # Delegate saving the resulting data to a blocking callback in a thread.
         payload = {
             "filename": self.full_file_path.value,
-            "data": self._get_current_dataset(),
+            "data": self._get_current_dataset(frame=self.frame_num.value),
             "uid": str(uuid.uuid4()),
             "timestamp": ttime.time(),
+            "frame_number": self.frame_num.value,
+            "update_existing": self.frame_num.value > 0,
         }
 
         await self._request_queue.async_put(payload)
@@ -175,6 +184,8 @@ class CaprotoSaveIOC(PVGroup):
         if response["success"]:
             # Increment the counter only on a successful saving of the file.
             await self.frame_num.write(self.frame_num.value + 1)
+
+        # await self.acquire.write(AcqStatuses.IDLE.value)
 
         return False
 
@@ -185,9 +196,15 @@ class CaprotoSaveIOC(PVGroup):
             received = request_queue.get()
             filename = received["filename"]
             data = received["data"]
+            frame_number = received["frame_number"]
+            update_existing = received["update_existing"]
             try:
-                save_hdf5(fname=filename, data=data)
-                print(f"{now()}: saved {data.shape} data into:\n  {filename}")
+                save_hdf5(
+                    fname=filename, data=data, mode="a", update_existing=update_existing
+                )
+                print(
+                    f"{now()}: saved {frame_number=} {data.shape} data into:\n  {filename}"
+                )
 
                 success = True
                 error_message = ""
@@ -213,6 +230,41 @@ class OphydDeviceWithCaprotoIOC(Device):
     full_file_path = Cpt(EpicsSignalRO, "full_file_path", string=True)
     frame_num = Cpt(EpicsSignal, "frame_num")
     ioc_stage = Cpt(EpicsSignal, "stage", string=True)
+    acquire = Cpt(EpicsSignal, "acquire", string=True)
+
+    def set(self, command):
+        """The set method with values for staging and acquiring."""
+
+        print(f"{now()}: {command = }")
+        if command in [StageStates.STAGED.value, "stage"]:
+            expected_old_value = StageStates.UNSTAGED.value
+            expected_new_value = StageStates.STAGED.value
+            obj = self.ioc_stage
+            cmd = StageStates.STAGED.value
+
+        if command in [StageStates.UNSTAGED.value, "unstage"]:
+            expected_old_value = StageStates.STAGED.value
+            expected_new_value = StageStates.UNSTAGED.value
+            obj = self.ioc_stage
+            cmd = StageStates.UNSTAGED.value
+
+        if command in [AcqStatuses.ACQUIRING.value, "acquire"]:
+            expected_old_value = AcqStatuses.ACQUIRING.value
+            expected_new_value = AcqStatuses.IDLE.value
+            obj = self.acquire
+            cmd = AcqStatuses.ACQUIRING.value
+
+        def cb(value, old_value, **kwargs):
+            # pylint: disable=unused-argument
+            print(f"{now()}: {old_value} -> {value}")
+            if value == expected_new_value and old_value == expected_old_value:
+                return True
+            return False
+
+        st = SubscriptionStatus(obj, callback=cb, run=False)
+        print(f"{now()}: {cmd = }")
+        obj.put(cmd)
+        return st
 
 
 def check_args(parser_, split_args_):
