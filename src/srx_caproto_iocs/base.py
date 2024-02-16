@@ -128,7 +128,10 @@ class CaprotoSaveIOC(PVGroup):
                 return False
 
             file_name = self.file_name.value
-            uid = "" if "{uid" not in file_name else str(uuid.uuid4())
+            uid = "" if not any(
+                s in file_name for s in ("{uid", "{suid")
+            ) else str(uuid.uuid4())
+            uid = "" if "{uid" not in file_name or "{suid" not in file_name else str(uuid.uuid4())
             full_file_path = write_dir / file_name.format(
                 num=self.frame_num.value, uid=uid, suid=uid[:8]
             )
