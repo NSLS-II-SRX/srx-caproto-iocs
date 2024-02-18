@@ -65,6 +65,13 @@ jobs:
 
       - name: Set env vars
         run: |
+
+          export REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}  # just the repo, as opposed to org/repo
+          echo "REPOSITORY_NAME=${REPOSITORY_NAME}" >> $GITHUB_ENV
+
+          export PYTHONVER=$(echo ${{ matrix.python-version }} | sed 's/\.//g')
+          echo "PYTHONVER=${PYTHONVER}" >> $GITHUB_ENV
+
           export DATETIME_STRING=$(date +%Y%m%d%H%M%S)
           echo "DATETIME_STRING=${DATETIME_STRING}" >> $GITHUB_ENV
 
@@ -81,7 +88,9 @@ jobs:
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: test-artifacts-{{ env.DATETIME_STRING }}
+          name:
+            ${{ env.REPOSITORY_NAME }}-${{ env.DATETIME_STRING }}-py${{
+            env.PYTHONVER }}
           path: /tmp/srx-caproto-iocs/
           retention-days: 14
 
