@@ -238,7 +238,7 @@ class OphydDeviceWithCaprotoIOC(Device):
     def set(self, command):
         """The set method with values for staging and acquiring."""
 
-        print(f"{now()}: {command = }")
+        # print(f"{now()}: {command = }")
         if command in [StageStates.STAGED.value, "stage"]:
             expected_old_value = StageStates.UNSTAGED.value
             expected_new_value = StageStates.STAGED.value
