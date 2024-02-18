@@ -148,6 +148,11 @@ class CaprotoSaveIOC(PVGroup):
         return False
 
     def _get_current_dataset(self, frame):
+        """The method to return a desired dataset.
+
+        See https://scikit-image.org/docs/stable/auto_examples/data/plot_3d.html
+        for details about the dataset returned by the base class' method.
+        """
         dataset = skimage.data.cells3d().sum(axis=1)
         return dataset[frame, ...]
 
@@ -213,9 +218,6 @@ class CaprotoSaveIOC(PVGroup):
                 success = True
                 error_message = ""
             except Exception as exc:  # pylint: disable=broad-exception-caught
-                # The GeRM detector happens to response twice for a single
-                # ".CNT" put, so capture an attempt to save the file with the
-                # same name here and do nothing.
                 success = False
                 error_message = exc
                 print(
