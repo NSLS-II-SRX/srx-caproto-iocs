@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -vxeuo pipefail
+set -euo pipefail
 
 # shellcheck source=/dev/null
 if [ -f "/etc/profile.d/epics.sh" ]; then
