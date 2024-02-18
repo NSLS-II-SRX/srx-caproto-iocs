@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+from pathlib import Path
 
 import h5py
 import numpy as np
@@ -21,7 +22,6 @@ def save_hdf5(
     group_path="data/data",
     dtype="float32",
     mode="x",
-    update_existing=False,
 ):
     """The function to export the data to an HDF5 file.
 
@@ -33,6 +33,7 @@ def save_hdf5(
         w- or x     Create file, fail if exists
         a           Read/write if exists, create otherwise
     """
+    update_existing = Path(fname).is_file()
     with h5py.File(fname, mode, libver="latest") as h5file_desc:
         frame_shape = data.shape
         if not update_existing:

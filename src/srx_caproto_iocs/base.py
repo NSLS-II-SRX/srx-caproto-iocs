@@ -89,8 +89,8 @@ class CaprotoSaveIOC(PVGroup):
     async def queue(self, instance, async_lib):
         """The startup behavior of the count property to set up threading queues."""
         # pylint: disable=unused-argument
-        self._request_queue = async_lib.ThreadsafeQueue()
-        self._response_queue = async_lib.ThreadsafeQueue()
+        self._request_queue = async_lib.ThreadsafeQueue(maxsize=1)
+        self._response_queue = async_lib.ThreadsafeQueue(maxsize=1)
 
         # Start a separate thread that consumes requests and sends responses.
         thread = threading.Thread(
@@ -154,7 +154,8 @@ class CaprotoSaveIOC(PVGroup):
         for details about the dataset returned by the base class' method.
         """
         dataset = skimage.data.cells3d().sum(axis=1)
-        return dataset[frame, ...]
+        # This particular example dataset has 60 frames available, so we will cycle the slices for frame>=60.
+        return dataset[frame % dataset.shape[0], ...]
 
     @acquire.putter
     @no_reentry
@@ -184,7 +185,6 @@ class CaprotoSaveIOC(PVGroup):
             "uid": str(uuid.uuid4()),
             "timestamp": ttime.time(),
             "frame_number": self.frame_num.value,
-            "update_existing": self.frame_num.value > 0,
         }
 
         await self._request_queue.async_put(payload)
@@ -206,11 +206,8 @@ class CaprotoSaveIOC(PVGroup):
             filename = received["filename"]
             data = received["data"]
             frame_number = received["frame_number"]
-            update_existing = received["update_existing"]
             try:
-                save_hdf5(
-                    fname=filename, data=data, mode="a", update_existing=update_existing
-                )
+                save_hdf5(fname=filename, data=data, mode="a")
                 print(
                     f"{now()}: saved {frame_number=} {data.shape} data into:\n  {filename}"
                 )
@@ -262,13 +259,13 @@ class OphydDeviceWithCaprotoIOC(Device):
 
         def cb(value, old_value, **kwargs):
             # pylint: disable=unused-argument
-            print(f"{now()}: {old_value} -> {value}")
+            # print(f"{now()}: {old_value} -> {value}")
             if value == expected_new_value and old_value == expected_old_value:
                 return True
             return False
 
         st = SubscriptionStatus(obj, callback=cb, run=False)
-        print(f"{now()}: {cmd = }")
+        # print(f"{now()}: {cmd = }")
         obj.put(cmd)
         return st
 
