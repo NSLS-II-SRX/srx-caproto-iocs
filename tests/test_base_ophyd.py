@@ -12,7 +12,9 @@ from srx_caproto_iocs.utils import now
 
 
 @pytest.mark.cloud_friendly()
-@pytest.mark.parametrize("date_template", ["%Y/%m/", "%Y/%m/%d", "mydir/%Y/%m/%d", "disguised_spaces_%c"])
+@pytest.mark.parametrize(
+    "date_template", ["%Y/%m/", "%Y/%m/%d", "mydir/%Y/%m/%d", "disguised_spaces_%c"]
+)
 def test_base_ophyd_templates(
     base_caproto_ioc, base_ophyd_device, date_template, num_frames=50, remove=False
 ):
