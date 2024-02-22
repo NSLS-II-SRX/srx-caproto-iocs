@@ -5,7 +5,7 @@ from ophyd import Device, EpicsSignal
 
 
 class OphydChannelTypes(Device):
-    """An ophyd Device which works with the CaprotoIOCChannelTypes caproto IOC."""
+    """An ophyd Device which works with the CaprotoStringIOC caproto IOC."""
 
     bare_string = Cpt(EpicsSignal, "bare_string", string=True)
     implicit_string_type = Cpt(EpicsSignal, "implicit_string_type", string=True)

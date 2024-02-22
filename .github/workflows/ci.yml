@@ -64,7 +64,7 @@ jobs:
 
       - name: Set env vars
         run: |
-
+          set -x
           export REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}  # just the repo, as opposed to org/repo
           echo "REPOSITORY_NAME=${REPOSITORY_NAME}" >> $GITHUB_ENV
 

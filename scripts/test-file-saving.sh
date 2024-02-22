@@ -10,10 +10,7 @@ fi
 num="${1:-50}"
 
 data_dir="/tmp/test/$(date +%Y/%m/%d)"
-
-if [ ! -d "${data_dir}" ]; then
-	mkdir -v -p "${data_dir}"
-fi
+mkdir -v -p "${data_dir}"
 
 caput "BASE:{Dev:Save1}:write_dir" "${data_dir}"
 caput "BASE:{Dev:Save1}:file_name" "saveme_{num:06d}_{uid}.h5"
