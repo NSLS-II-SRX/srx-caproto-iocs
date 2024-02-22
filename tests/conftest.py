@@ -109,7 +109,7 @@ def caproto_ioc_channel_types(wait=5):
 @pytest.fixture()
 def ophyd_channel_types():
     dev = OphydChannelTypes(OPHYD_PV_PREFIX, name="ophyd_channel_type")
-    letters = iter(list(string.ascii_letters))
+    letters = iter(string.ascii_letters)
     for cpt in sorted(dev.component_names):
         getattr(dev, cpt).put(next(letters))
     return dev
