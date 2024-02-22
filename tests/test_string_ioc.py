@@ -5,7 +5,7 @@ import subprocess
 
 import pytest
 
-LIMIT = 40 - 1
+LIMIT = 39
 STRING_39 = string.ascii_letters[:LIMIT]
 STRING_LONGER = string.ascii_letters
 
@@ -22,19 +22,19 @@ def test_strings(
     if len(value) <= LIMIT:
         ophyd_channel_types.implicit_string_type.put(value)
     else:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="byte string too long"):
             ophyd_channel_types.implicit_string_type.put(value)
 
     if len(value) <= LIMIT:
         ophyd_channel_types.string_type.put(value)
     else:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="byte string too long"):
             ophyd_channel_types.string_type.put(value)
 
     if len(value) <= LIMIT:
         ophyd_channel_types.char_type_as_string.put(value)
     else:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="byte string too long"):
             ophyd_channel_types.char_type_as_string.put(value)
 
     ophyd_channel_types.char_type.put(value)
