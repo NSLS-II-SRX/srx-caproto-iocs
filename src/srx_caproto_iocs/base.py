@@ -39,14 +39,14 @@ class CaprotoSaveIOC(PVGroup):
         value="/tmp",
         doc="The directory to write data to. It support datetime formatting, e.g. '/tmp/det/%Y/%m/%d/'",
         string_encoding="utf-8",
-        report_as_string=True,
+        dtype=ChannelType.CHAR,
         max_length=255,
     )
     file_name = pvproperty(
         value="test.h5",
         doc="The file name of the file to write to. It support <str>.format() based formatting, e.g. 'scan_{num:06d}.h5'",
         string_encoding="utf-8",
-        report_as_string=True,
+        dtype=ChannelType.CHAR,
         max_length=255,
     )
     full_file_path = pvproperty(
