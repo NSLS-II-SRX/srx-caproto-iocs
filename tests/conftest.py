@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import socket
+import string
 import subprocess
 import sys
 import time as ttime
@@ -106,4 +107,8 @@ def caproto_ioc_channel_types(wait=5):
 
 @pytest.fixture()
 def ophyd_channel_types():
-    return OphydChannelTypes(OPHYD_PV_PREFIX, name="ophyd_channel_type")
+    dev = OphydChannelTypes(OPHYD_PV_PREFIX, name="ophyd_channel_type")
+    letters = iter(list(string.ascii_letters))
+    for cpt in sorted(dev.component_names):
+        getattr(dev, cpt).put(next(letters))
+    return dev

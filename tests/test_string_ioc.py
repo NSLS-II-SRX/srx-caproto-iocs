@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import string
 import subprocess
 
@@ -13,7 +14,7 @@ STRING_LONGER = string.ascii_letters
 @pytest.mark.cloud_friendly()
 @pytest.mark.parametrize("value", [STRING_39, STRING_LONGER])
 def test_strings(
-    # caproto_ioc_channel_types,
+    caproto_ioc_channel_types,
     ophyd_channel_types,
     value,
 ):
@@ -32,6 +33,12 @@ def test_strings(
             ophyd_channel_types.string_type.put(value)
 
     if len(value) <= LIMIT:
+        ophyd_channel_types.string_type_enum.put(value)
+    else:
+        with pytest.raises(ValueError, match="byte string too long"):
+            ophyd_channel_types.string_type_enum.put(value)
+
+    if len(value) <= LIMIT:
         ophyd_channel_types.char_type_as_string.put(value)
     else:
         with pytest.raises(ValueError, match="byte string too long"):
@@ -42,11 +49,62 @@ def test_strings(
 
 @pytest.mark.cloud_friendly()
 @pytest.mark.needs_epics_core()
-@pytest.mark.parametrize("value", [STRING_39, STRING_LONGER])
-def test_with_epics_core(ophyd_channel_types, value):
-    for cpt in ophyd_channel_types.component_names:
+def test_cainfo(caproto_ioc_channel_types, ophyd_channel_types):
+    for cpt in sorted(ophyd_channel_types.component_names):
+        command = ["cainfo", getattr(ophyd_channel_types, cpt).pvname]
+        command_str = " ".join(command)
         ret = subprocess.run(
-            ["caput", "-S", getattr(ophyd_channel_types, cpt).pvname, value],
+            command,
             check=False,
+            capture_output=True,
         )
-        print(f"{cpt=}: {ret.returncode=}\n")
+        stdout = ret.stdout.decode()
+        print(
+            f"command: {command_str}\n  {ret.returncode=}\n  STDOUT:\n{ret.stdout.decode()}\n  STDERR:\n{ret.stderr.decode()}\n"
+        )
+        assert ret.returncode == 0
+        if cpt in [
+            "char_type_as_string",
+            "implicit_string_type",
+            "string_type",
+            "string_type_enum",
+        ]:
+            assert "Native data type: DBF_STRING" in stdout
+        else:
+            assert "Native data type: DBF_CHAR" in stdout
+
+
+@pytest.mark.cloud_friendly()
+@pytest.mark.needs_epics_core()
+@pytest.mark.parametrize("value", [STRING_39, STRING_LONGER])
+def test_caput(caproto_ioc_channel_types, ophyd_channel_types, value):
+    option = ""
+    for cpt in sorted(ophyd_channel_types.component_names):
+        if cpt in [
+            "char_type_as_string",
+            "implicit_string_type",
+            "string_type",
+            "string_type_enum",
+        ]:
+            option = "-s"
+            would_trim = True
+        else:
+            option = "-S"
+            would_trim = False
+        command = ["caput", option, getattr(ophyd_channel_types, cpt).pvname, value]
+        command_str = " ".join(command)
+        ret = subprocess.run(
+            command,
+            check=False,
+            capture_output=True,
+        )
+        stdout = ret.stdout.decode()
+        print(
+            f"command: {command_str}\n  {ret.returncode=}\n  STDOUT:\n{stdout}\n  STDERR:\n{ret.stderr.decode()}\n"
+        )
+        assert ret.returncode == 0
+        actual = re.search("New : (.*)", stdout).group(1).split()[-1].rstrip()
+        if not would_trim or len(value) == LIMIT:
+            assert actual == value
+        else:
+            assert len(actual) < len(value)
