@@ -53,15 +53,14 @@ jobs:
     env:
       TZ: America/New_York
 
+    defaults:
+      run:
+        shell: bash -l {0}
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          allow-prereleases: true
 
       - name: Set env vars
         run: |
@@ -75,9 +74,33 @@ jobs:
           export DATETIME_STRING=$(date +%Y%m%d%H%M%S)
           echo "DATETIME_STRING=${DATETIME_STRING}" >> $GITHUB_ENV
 
+      # - uses: actions/setup-python@v5
+      #   with:
+      #     python-version: ${{ matrix.python-version }}
+      #     allow-prereleases: true
+
+      - name: Set up Python ${{ matrix.python-version }} with conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment:
+            ${{ env.REPOSITORY_NAME }}-py${{ matrix.python-version }}
+          python-version: ${{ matrix.python-version }}
+          mamba-version: "*"
+          miniforge-version: latest
+          channels: conda-forge
+          use-mamba: true
+
+      - name: Install epics-base packages from CF
+        run: |
+          set -vxeuo pipefail
+          mamba install -c conda-forge -y epics-base "setuptools<67"
+          conda env list
+          conda list
+
       - name: Install package
         run: |
           set -vxeuo pipefail
+          which caput
           python -m pip install .[test]
 
       - name: Test package

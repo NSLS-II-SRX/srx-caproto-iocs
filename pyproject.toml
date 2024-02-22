@@ -41,7 +41,6 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-  "netifaces",
   "pytest >=6",
   "pytest-cov >=3",
 ]
