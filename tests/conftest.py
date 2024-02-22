@@ -46,13 +46,14 @@ def start_ioc_subprocess(ioc_name="srx_caproto_iocs.base", pv_prefix=CAPROTO_PV_
     print(
         f"\nStarting caproto IOC in via a fixture using the following command:\n\n  {command}\n"
     )
+    os.environ.update(env)
     return subprocess.Popen(
         command.split(),
         start_new_session=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         shell=False,
-        env=env,
+        env=os.environ,
     )
 
 
