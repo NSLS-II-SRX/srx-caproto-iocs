@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import shutil
 import time as ttime
 import uuid
@@ -22,7 +23,13 @@ def test_base_ophyd_templates(
     date = now(as_object=True)
     write_dir_root = Path(tmpdirname)
     dir_template = f"{write_dir_root}/{date_template}"
-    write_dir = Path(date.strftime(dir_template))
+
+    # We pre-create the test directory in advance as the IOC is not supposed to create one.
+    # The assumption for the IOC is that the directory will exist before saving a file to that.
+    # We need to substitute the unsupported characters below for it to work, as the IOC will do
+    # the same in `full_file_path` before returning the value.
+    sanitizer = re.compile(pattern=r"[\":<>|\*\?\s]")
+    write_dir = Path(sanitizer.sub("_", date.strftime(dir_template)))
     write_dir.mkdir(parents=True, exist_ok=True)
 
     file_template = "scan_{num:06d}_{uid}.hdf5"

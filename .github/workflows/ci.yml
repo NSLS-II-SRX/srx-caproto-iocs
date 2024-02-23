@@ -53,19 +53,18 @@ jobs:
     env:
       TZ: America/New_York
 
+    defaults:
+      run:
+        shell: bash -l {0}
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          allow-prereleases: true
-
       - name: Set env vars
         run: |
-
+          set -x
           export REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}  # just the repo, as opposed to org/repo
           echo "REPOSITORY_NAME=${REPOSITORY_NAME}" >> $GITHUB_ENV
 
@@ -75,9 +74,23 @@ jobs:
           export DATETIME_STRING=$(date +%Y%m%d%H%M%S)
           echo "DATETIME_STRING=${DATETIME_STRING}" >> $GITHUB_ENV
 
+      # - uses: actions/setup-python@v5
+      #   with:
+      #     python-version: ${{ matrix.python-version }}
+      #     allow-prereleases: true
+
+      - name: Set up Python ${{ matrix.python-version }} with conda
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          init-shell: bash
+          environment-name: ${{env.REPOSITORY_NAME}}-py${{matrix.python-version}}
+          create-args: >-
+            python=${{ matrix.python-version }} epics-base setuptools<67
+
       - name: Install package
         run: |
           set -vxeuo pipefail
+          which caput
           python -m pip install .[test]
 
       - name: Test package
