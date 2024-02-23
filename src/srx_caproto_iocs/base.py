@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import textwrap
 import threading
 import time as ttime
@@ -116,12 +117,15 @@ class CaprotoSaveIOC(PVGroup):
 
         if value == StageStates.STAGED.value:
             # Steps:
-            # 1. Render 'write_dir' with datetime lib and replace any blank spaces with underscores.
-            # 2. Render 'file_name' with .format().
-            # 3. Replace blank spaces with underscores.
+            # 1. Render 'write_dir' with datetime lib
+            # 2. Replace unsupported characters with underscores (sanitize).
+            # 3. Check if sanitized 'write_dir' exists
+            # 4. Render 'file_name' with .format().
+            # 5. Replace unsupported characters with underscores.
 
+            sanitizer = re.compile(pattern=r"[\":<>|\*\?\s]")
             date = now(as_object=True)
-            write_dir = Path(date.strftime(self.write_dir.value).replace(" ", "_"))
+            write_dir = Path(sanitizer.sub("_", date.strftime(self.write_dir.value)))
             if not write_dir.exists():
                 msg = f"Path '{write_dir}' does not exist."
                 print(msg)
@@ -136,8 +140,7 @@ class CaprotoSaveIOC(PVGroup):
             full_file_path = write_dir / file_name.format(
                 num=self.frame_num.value, uid=uid, suid=uid[:8]
             )
-            full_file_path = str(full_file_path)
-            full_file_path.replace(" ", "_")
+            full_file_path = sanitizer.sub("_", str(full_file_path))
 
             print(f"{now()}: {full_file_path = }")
 
