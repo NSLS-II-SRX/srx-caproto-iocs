@@ -15,7 +15,33 @@ def now(as_object=False):
     return _now.isoformat()
 
 
-def save_hdf5(
+def save_hdf5_1d(
+    fname,
+    data,
+    group_path="data",
+    dtype="float32",
+    mode="x",
+):
+    """The function to export the 1-D data to an HDF5 file.
+
+    Check https://docs.h5py.org/en/stable/high/file.html#opening-creating-files for modes:
+
+        r           Readonly, file must exist (default)
+        r+          Read/write, file must exist
+        w           Create file, truncate if exists
+        w- or x     Create file, fail if exists
+        a           Read/write if exists, create otherwise
+    """
+    with h5py.File(fname, mode, libver="latest") as h5file_desc:
+        dataset = h5file_desc.create_dataset(
+            group_path,
+            data=data,
+            dtype=dtype,
+        )
+        dataset.flush()
+
+
+def save_hdf5_nd(
     fname,
     data,
     group_name="/entry",
@@ -23,7 +49,7 @@ def save_hdf5(
     dtype="float32",
     mode="x",
 ):
-    """The function to export the data to an HDF5 file.
+    """The function to export the N-D data to an HDF5 file (N>1).
 
     Check https://docs.h5py.org/en/stable/high/file.html#opening-creating-files for modes:
 
@@ -54,5 +80,5 @@ def save_hdf5(
         h5file_desc.swmr_mode = True
 
         dataset.resize((frame_num + 1, *frame_shape))
-        dataset[frame_num, :, :] = data
+        dataset[frame_num, ...] = data
         dataset.flush()

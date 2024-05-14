@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import textwrap
-from pprint import pformat
 
 from caproto.asyncio.client import Context
 from caproto.server import run, template_arg_parser
@@ -102,20 +101,22 @@ class ZebraSaveIOC(CaprotoSaveIOC):
         super().__init__(*args, **kwargs)
         self._external_pvs = external_pvs
 
-    async def _stage(self, *args, **kwargs):
-        await super()._stage(*args, **kwargs)
+    # async def _stage(self, *args, **kwargs):
+    #     ret = await super()._stage(*args, **kwargs)
+    #     return ret
+
+    async def _get_current_dataset(self, frame, external_pv="enc1"):
         client_context = Context()
-        res = {}
-        if self._external_pvs is not None:
-            pvobjects = await client_context.get_pvs(*self._external_pvs.values())
-            for i, (name, pv) in enumerate(self._external_pvs.items()):  # noqa: B007
-                pvobject = pvobjects[i]
-                # print(f"{now()}: {pvobject = }")
-                ret = await pvobject.read()
-                # print(f"{now()}: {val.data}")
-                res[name] = {"data": ret.data, "shape": ret.data.shape}
-        print(f"{now()}:\n{pformat(res)}")
-        return True
+        (pvobject,) = await client_context.get_pvs(self._external_pvs[external_pv])
+        print(f"{pvobject = }")
+        # pvobject = pvobjects[0]
+        ret = await pvobject.read()
+
+        dataset = ret.data
+
+        print(f"{now()}:\n{dataset} {dataset.shape}")
+
+        return dataset
 
 
 if __name__ == "__main__":
