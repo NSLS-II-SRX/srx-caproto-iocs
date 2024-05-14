@@ -104,8 +104,7 @@ class CaprotoSaveIOC(PVGroup):
         )
         thread.start()
 
-    @stage.putter
-    async def stage(self, instance, value):
+    async def _stage(self, instance, value):
         """The stage method to perform preparation of a dataset to save the data."""
         if (
             instance.value in [True, StageStates.STAGED.value]
@@ -149,6 +148,10 @@ class CaprotoSaveIOC(PVGroup):
             return True
 
         return False
+
+    @stage.putter
+    async def stage(self, *args, **kwargs):
+        return await self._stage(*args, **kwargs)
 
     def _get_current_dataset(self, frame):
         """The method to return a desired dataset.
