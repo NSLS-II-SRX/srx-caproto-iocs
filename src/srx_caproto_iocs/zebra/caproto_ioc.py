@@ -118,6 +118,73 @@ class ZebraSaveIOC(CaprotoSaveIOC):
 
         return dataset
 
+    @acquire.putter
+    @no_reentry
+    async def acquire(self, instance, value):
+        """The acquire method to perform an individual acquisition of a data point."""
+        if (
+            value != AcqStatuses.ACQUIRING.value
+            # or self.stage.value not in [True, StageStates.STAGED.value]
+        ):
+            return False
+
+        if (
+            instance.value in [True, AcqStatuses.ACQUIRING.value]
+            and value == AcqStatuses.ACQUIRING.value
+        ):
+            print(
+                f"The device is already acquiring. Please wait until the '{AcqStatuses.IDLE.value}' status."
+            )
+            return True
+
+        await self.acquire.write(AcqStatuses.ACQUIRING.value)
+
+        # Delegate saving the resulting data to a blocking callback in a thread.
+        payload = {
+            "filename": self.full_file_path.value,
+            "data": await self._get_current_dataset(frame=self.frame_num.value),
+            "uid": str(uuid.uuid4()),
+            "timestamp": ttime.time(),
+            "frame_number": self.frame_num.value,
+        }
+
+        await self._request_queue.async_put(payload)
+        response = await self._response_queue.async_get()
+
+        if response["success"]:
+            # Increment the counter only on a successful saving of the file.
+            await self.frame_num.write(self.frame_num.value + 1)
+
+        # await self.acquire.write(AcqStatuses.IDLE.value)
+
+        return False
+
+    @staticmethod
+    def saver(request_queue, response_queue):
+        """The saver callback for threading-based queueing."""
+        while True:
+            received = request_queue.get()
+            filename = received["filename"]
+            data = received["data"]
+            frame_number = received["frame_number"]
+            try:
+                save_hdf5_1d(fname=filename, data=data, mode="x", group_path="enc1")
+                print(
+                    f"{now()}: saved {frame_number=} {data.shape} data into:\n  {filename}"
+                )
+
+                success = True
+                error_message = ""
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                success = False
+                error_message = exc
+                print(
+                    f"Cannot save file {filename!r} due to the following exception:\n{exc}"
+                )
+
+            response = {"success": success, "error_message": error_message}
+            response_queue.put(response)
+
 
 if __name__ == "__main__":
     parser, split_args = template_arg_parser(
@@ -125,13 +192,16 @@ if __name__ == "__main__":
     )
     ioc_options, run_options = check_args(parser, split_args)
 
+    external_pv_prefix = ioc_options["prefix"].replace("{{", "{").replace("}}", "}")  # "XF:05IDD-ES:1{Dev:Zebra2}:"
+
     external_pvs = {
-        "pulse_step": "XF:05IDD-ES:1{Dev:Zebra2}:PC_PULSE_STEP",
-        "data_in_progress": "XF:05IDD-ES:1{Dev:Zebra2}:ARRAY_ACQ",
-        "enc1": "XF:05IDD-ES:1{Dev:Zebra2}:PC_ENC1",
-        "enc2": "XF:05IDD-ES:1{Dev:Zebra2}:PC_ENC2",
-        "enc3": "XF:05IDD-ES:1{Dev:Zebra2}:PC_ENC3",
-        "time": "XF:05IDD-ES:1{Dev:Zebra2}:PC_TIME",
+        "pulse_step": external_pv_prefix + "PC_PULSE_STEP",
+        "data_in_progress": external_pv_prefix + "ARRAY_ACQ",
+        "enc1": external_pv_prefix + "PC_ENC1",
+        "enc2": external_pv_prefix + "PC_ENC2",
+        "enc3": external_pv_prefix + "PC_ENC3",
+        "enc4": external_pv_prefix + "PC_ENC4",
+        "time": external_pv_prefix + "PC_TIME",
     }
 
     ioc = ZebraSaveIOC(external_pvs=external_pvs, **ioc_options)
