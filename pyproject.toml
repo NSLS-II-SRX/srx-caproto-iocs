@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling", "hatch-vcs", "setuptools>=61,<67"]
 build-backend = "hatchling.build"
 
 
@@ -30,7 +30,14 @@ classifiers = [
   "Typing :: Typed",
 ]
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+  "caproto",
+  "h5py",
+  "numpy",
+  "ophyd",
+  "pyepics",  # does not work with 'setuptools' version higher than v66.1.1
+  "scikit-image[data]",
+]
 
 [project.optional-dependencies]
 test = [
@@ -38,6 +45,10 @@ test = [
   "pytest-cov >=3",
 ]
 dev = [
+  "ipython",
+  "nexpy",
+  "pre-commit",
+  "pylint",
   "pytest >=6",
   "pytest-cov >=3",
 ]
@@ -76,7 +87,12 @@ log_cli_level = "INFO"
 testpaths = [
   "tests",
 ]
-
+markers = [
+    "hardware: marks tests as requiring the hardware IOC to be available/running (deselect with '-m \"not hardware\"')",
+    "tiled: marks tests as requiring tiled",
+    "cloud_friendly: marks tests to be able to execute in the CI in the cloud",
+    "needs_epics_core: marks tests as requiring epics-core executables such as caget, caput, etc."
+]
 
 [tool.coverage]
 run.source = ["srx_caproto_iocs"]
@@ -108,7 +124,7 @@ src = ["src"]
 extend-select = [
   "B",        # flake8-bugbear
   "I",        # isort
-  "ARG",      # flake8-unused-arguments
+  # "ARG",      # flake8-unused-arguments
   "C4",       # flake8-comprehensions
   "EM",       # flake8-errmsg
   "ICN",      # flake8-import-conventions
@@ -119,9 +135,9 @@ extend-select = [
   "PT",       # flake8-pytest-style
   "PTH",      # flake8-use-pathlib
   "RET",      # flake8-return
-  "RUF",      # Ruff-specific
+  # "RUF",      # Ruff-specific
   "SIM",      # flake8-simplify
-  "T20",      # flake8-print
+  # "T20",      # flake8-print
   "UP",       # pyupgrade
   "YTT",      # flake8-2020
   "EXE",      # flake8-executable
