@@ -16,7 +16,7 @@ from ophyd import Component as Cpt
 from ophyd import Device, EpicsSignal, EpicsSignalRO
 from ophyd.status import SubscriptionStatus
 
-from .utils import now, save_hdf5
+from .utils import now, save_hdf5_nd
 
 
 class AcqStatuses(Enum):
@@ -104,8 +104,7 @@ class CaprotoSaveIOC(PVGroup):
         )
         thread.start()
 
-    @stage.putter
-    async def stage(self, instance, value):
+    async def _stage(self, instance, value):
         """The stage method to perform preparation of a dataset to save the data."""
         if (
             instance.value in [True, StageStates.STAGED.value]
@@ -150,7 +149,11 @@ class CaprotoSaveIOC(PVGroup):
 
         return False
 
-    def _get_current_dataset(self, frame):
+    @stage.putter
+    async def stage(self, *args, **kwargs):
+        return await self._stage(*args, **kwargs)
+
+    async def _get_current_dataset(self, frame):
         """The method to return a desired dataset.
 
         See https://scikit-image.org/docs/stable/auto_examples/data/plot_3d.html
@@ -184,7 +187,7 @@ class CaprotoSaveIOC(PVGroup):
         # Delegate saving the resulting data to a blocking callback in a thread.
         payload = {
             "filename": self.full_file_path.value,
-            "data": self._get_current_dataset(frame=self.frame_num.value),
+            "data": await self._get_current_dataset(frame=self.frame_num.value),
             "uid": str(uuid.uuid4()),
             "timestamp": ttime.time(),
             "frame_number": self.frame_num.value,
@@ -210,7 +213,7 @@ class CaprotoSaveIOC(PVGroup):
             data = received["data"]
             frame_number = received["frame_number"]
             try:
-                save_hdf5(fname=filename, data=data, mode="a")
+                save_hdf5_nd(fname=filename, data=data, mode="x", group_path="enc1")
                 print(
                     f"{now()}: saved {frame_number=} {data.shape} data into:\n  {filename}"
                 )
