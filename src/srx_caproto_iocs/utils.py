@@ -15,10 +15,9 @@ def now(as_object=False):
     return _now.isoformat()
 
 
-def save_hdf5_1d(
+def save_hdf5_zebra(
     fname,
     data,
-    group_path="data",
     dtype="float32",
     mode="x",
 ):
@@ -33,12 +32,13 @@ def save_hdf5_1d(
         a           Read/write if exists, create otherwise
     """
     with h5py.File(fname, mode, libver="latest") as h5file_desc:
-        dataset = h5file_desc.create_dataset(
-            group_path,
-            data=data,
-            dtype=dtype,
-        )
-        dataset.flush()
+        for pvname, value in data.items():
+            dataset = h5file_desc.create_dataset(
+                pvname,
+                data=value,
+                dtype=dtype,
+            )
+            dataset.flush()
 
 
 def save_hdf5_nd(

@@ -16,7 +16,7 @@ from ophyd import Component as Cpt
 from ophyd import Device, EpicsSignal, EpicsSignalRO
 from ophyd.status import SubscriptionStatus
 
-from .utils import now, save_hdf5_1d
+from .utils import now, save_hdf5_nd
 
 
 class AcqStatuses(Enum):
