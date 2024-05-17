@@ -145,29 +145,14 @@ class ZebraSaveIOC(CaprotoSaveIOC):
         max_length=DEFAULT_MAX_LENGTH,
     )
 
-    #     enc1 = Cpt(EpicsSignal, "PC_ENC1")
-    #     enc2 = Cpt(EpicsSignal, "PC_ENC2")
-    #     enc3 = Cpt(EpicsSignal, "PC_ENC3")
-    #     enc4 = Cpt(EpicsSignal, "PC_ENC4")
+    # def __init__(self, *args, external_pvs=None, **kwargs):
+    #     """Init method.
 
-    # data_in_progress = pvproperty()  # +
-    # time_d = pvproperty()
-    # enc1_d = pvproperty()TypeError: ZebraSaveIOC._get_current_dataset() got an unexpected keyword argument 'frame'
-
-    # pulse_step = pvproperty()
-
-    def __init__(self, *args, external_pvs=None, **kwargs):
-        """Init method.
-
-        external_pvs : dict
-            a dictionary of external PVs with keys as human-readable names.
-        """
-        super().__init__(*args, **kwargs)
-        self._external_pvs = external_pvs
-
-    # async def _stage(self, *args, **kwargs):
-    #     ret = await super()._stage(*args, **kwargs)
-    #     return ret
+    #     external_pvs : dict
+    #         a dictionary of external PVs with keys as human-readable names.
+    #     """
+    #     super().__init__(*args, **kwargs)
+    #     self._external_pvs = external_pvs
 
     async def _get_current_dataset(
         self, *args, **kwargs
@@ -223,19 +208,20 @@ if __name__ == "__main__":
     )
     ioc_options, run_options = check_args(parser, split_args)
 
-    external_pv_prefix = (
-        ioc_options["prefix"].replace("{{", "{").replace("}}", "}")
-    )  # "XF:05IDD-ES:1{Dev:Zebra2}:"
+    # external_pv_prefix = (
+    #     ioc_options["prefix"].replace("{{", "{").replace("}}", "}")
+    # )  # "XF:05IDD-ES:1{Dev:Zebra2}:"
 
-    external_pvs = {
-        "pulse_step": external_pv_prefix + "PC_PULSE_STEP",
-        "data_in_progress": external_pv_prefix + "ARRAY_ACQ",
-        "enc1": external_pv_prefix + "PC_ENC1",
-        "enc2": external_pv_prefix + "PC_ENC2",
-        "enc3": external_pv_prefix + "PC_ENC3",
-        "enc4": external_pv_prefix + "PC_ENC4",
-        "time": external_pv_prefix + "PC_TIME",
-    }
+    # external_pvs = {
+    #     "pulse_step": external_pv_prefix + "PC_PULSE_STEP",
+    #     "data_in_progress": external_pv_prefix + "ARRAY_ACQ",
+    #     "enc1": external_pv_prefix + "PC_ENC1",
+    #     "enc2": external_pv_prefix + "PC_ENC2",
+    #     "enc3": external_pv_prefix + "PC_ENC3",
+    #     "enc4": external_pv_prefix + "PC_ENC4",
+    #     "time": external_pv_prefix + "PC_TIME",
+    # }
 
-    ioc = ZebraSaveIOC(external_pvs=external_pvs, **ioc_options)
+    # ioc = ZebraSaveIOC(external_pvs=external_pvs, **ioc_options)
+    ioc = ZebraSaveIOC(**ioc_options)
     run(ioc.pvdb, **run_options)
