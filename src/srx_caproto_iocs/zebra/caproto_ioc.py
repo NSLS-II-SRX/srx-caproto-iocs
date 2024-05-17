@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import textwrap
+from enum import Enum
 
+from caproto import ChannelType
 from caproto.server import pvproperty, run, template_arg_parser
 
 from ..base import CaprotoSaveIOC, check_args
@@ -78,8 +80,22 @@ from ..utils import now, save_hdf5_zebra
 DEFAULT_MAX_LENGTH = 100_000
 
 
+class DevTypes(Enum):
+    """Enum class for devices."""
+
+    ZEBRA = "zebra"
+    SCALER = "scaler"
+
+
 class ZebraSaveIOC(CaprotoSaveIOC):
     """Zebra caproto save IOC."""
+
+    dev_type = pvproperty(
+        value=DevTypes.ZEBRA,
+        enum_strings=[x.value for x in DevTypes],
+        dtype=ChannelType.ENUM,
+        doc="Pick device type",
+    )
 
     enc1 = pvproperty(
         value=0,
@@ -102,6 +118,30 @@ class ZebraSaveIOC(CaprotoSaveIOC):
     zebra_time = pvproperty(
         value=0,
         doc="zebra time",
+        max_length=DEFAULT_MAX_LENGTH,
+    )
+
+    i0 = pvproperty(
+        value=0,
+        doc="i0 data",
+        max_length=DEFAULT_MAX_LENGTH,
+    )
+
+    im = pvproperty(
+        value=0,
+        doc="im data",
+        max_length=DEFAULT_MAX_LENGTH,
+    )
+
+    it = pvproperty(
+        value=0,
+        doc="it data",
+        max_length=DEFAULT_MAX_LENGTH,
+    )
+
+    sis_time = pvproperty(
+        value=0,
+        doc="sis time",
         max_length=DEFAULT_MAX_LENGTH,
     )
 
@@ -138,8 +178,13 @@ class ZebraSaveIOC(CaprotoSaveIOC):
         # # pvobject = pvobjects[0]
         # ret = await pvobject.read()
 
+        if self.dev_type == DevTypes.ZEBRA:
+            pvnames = ["enc1", "enc2", "enc3", "zebra_time"]
+        else:
+            pvnames = ["i0", "im", "it", "sis_time"]
+
         dataset = {}
-        for pvname in ["enc1", "enc2", "enc3", "zebra_time"]:
+        for pvname in pvnames:
             dataset[pvname] = getattr(self, pvname).value
 
         print(f"{now()}:\n{dataset}")
