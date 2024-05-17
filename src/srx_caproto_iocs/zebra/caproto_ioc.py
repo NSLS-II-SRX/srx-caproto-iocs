@@ -91,7 +91,7 @@ class ZebraSaveIOC(CaprotoSaveIOC):
     """Zebra caproto save IOC."""
 
     dev_type = pvproperty(
-        value=DevTypes.ZEBRA,
+        value=DevTypes.ZEBRA.value,
         enum_strings=[x.value for x in DevTypes],
         dtype=ChannelType.ENUM,
         doc="Pick device type",
