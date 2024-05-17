@@ -99,48 +99,56 @@ class ZebraSaveIOC(CaprotoSaveIOC):
 
     enc1 = pvproperty(
         value=0,
+        dtype=ChannelType.DOUBLE,
         doc="enc1 data",
         max_length=DEFAULT_MAX_LENGTH,
     )
 
     enc2 = pvproperty(
         value=0,
+        dtype=ChannelType.DOUBLE,
         doc="enc2 data",
         max_length=DEFAULT_MAX_LENGTH,
     )
 
     enc3 = pvproperty(
         value=0,
+        dtype=ChannelType.DOUBLE,
         doc="enc3 data",
         max_length=DEFAULT_MAX_LENGTH,
     )
 
     zebra_time = pvproperty(
         value=0,
+        dtype=ChannelType.DOUBLE,
         doc="zebra time",
         max_length=DEFAULT_MAX_LENGTH,
     )
 
     i0 = pvproperty(
         value=0,
+        dtype=ChannelType.DOUBLE,
         doc="i0 data",
         max_length=DEFAULT_MAX_LENGTH,
     )
 
     im = pvproperty(
         value=0,
+        dtype=ChannelType.DOUBLE,
         doc="im data",
         max_length=DEFAULT_MAX_LENGTH,
     )
 
     it = pvproperty(
         value=0,
+        dtype=ChannelType.DOUBLE,
         doc="it data",
         max_length=DEFAULT_MAX_LENGTH,
     )
 
     sis_time = pvproperty(
         value=0,
+        dtype=ChannelType.DOUBLE,
         doc="sis time",
         max_length=DEFAULT_MAX_LENGTH,
     )
