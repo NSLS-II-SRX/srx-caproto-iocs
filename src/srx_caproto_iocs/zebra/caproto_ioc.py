@@ -163,7 +163,7 @@ class ZebraSaveIOC(CaprotoSaveIOC):
         # # pvobject = pvobjects[0]
         # ret = await pvobject.read()
 
-        if self.dev_type == DevTypes.ZEBRA:
+        if self.dev_type.value == DevTypes.ZEBRA.value:
             pvnames = ["enc1", "enc2", "enc3", "zebra_time"]
         else:
             pvnames = ["i0", "im", "it", "sis_time"]
