@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import requests
-from PIL import Image, ImageFont, ImageDraw 
+import textwrap
 from io import BytesIO
 
-import textwrap
-from enum import Enum
-
+import requests
 from caproto import ChannelType
 from caproto.server import pvproperty, run, template_arg_parser
+from PIL import Image
 
 from ..base import CaprotoSaveIOC, check_args
 from ..utils import now, save_image
@@ -18,7 +16,7 @@ DEFAULT_MAX_LENGTH = 10_000_000
 
 class AxisSaveIOC(CaprotoSaveIOC):
     """Axis caproto save IOC."""
-    
+
     common_kwargs = {"max_length": 255, "string_encoding": "utf-8"}
 
     key1 = pvproperty(
@@ -40,9 +38,7 @@ class AxisSaveIOC(CaprotoSaveIOC):
         print(f"{camera_host = }")
         super().__init__(*args, **kwargs)
 
-    async def _get_current_dataset(
-        self, *args, **kwargs
-    ):  
+    async def _get_current_dataset(self, *args, **kwargs):
         url = f"http://{self._camera_host}/axis-cgi/jpg/image.cgi"
         resp = requests.get(url)
         img = Image.open(BytesIO(resp.content))
@@ -84,7 +80,8 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "-c", "--camera-host",
+        "-c",
+        "--camera-host",
         help="The camera hostname, e.g., 'xf06bm-cam5'",
         required=True,
         type=str,
