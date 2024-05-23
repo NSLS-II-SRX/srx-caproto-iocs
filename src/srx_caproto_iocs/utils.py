@@ -15,7 +15,8 @@ def now(as_object=False):
     return _now.isoformat()
 
 
-def save_image(fname, data, file_format="jpeg", mode="x"):
+def save_image(fname, data, file_format="jpeg", mode="x"):  # pylint: disable=unused-argument
+    """The function to export the image data (e.g., to a JPEG file."""
     data.save(fname, file_format=file_format)
 
 

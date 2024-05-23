@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 from __future__ import annotations
 
 import textwrap
@@ -16,8 +17,6 @@ DEFAULT_MAX_LENGTH = 10_000_000
 
 class AxisSaveIOC(CaprotoSaveIOC):
     """Axis caproto save IOC."""
-
-    common_kwargs = {"max_length": 255, "string_encoding": "utf-8"}
 
     key1 = pvproperty(
         value="",
@@ -38,9 +37,9 @@ class AxisSaveIOC(CaprotoSaveIOC):
         print(f"{camera_host = }")
         super().__init__(*args, **kwargs)
 
-    async def _get_current_dataset(self, *args, **kwargs):
+    async def _get_current_dataset(self, *args, **kwargs):  # pylint: disable=unused-argument
         url = f"http://{self._camera_host}/axis-cgi/jpg/image.cgi"
-        resp = requests.get(url)
+        resp = requests.get(url, timeout=10)
         img = Image.open(BytesIO(resp.content))
 
         dataset = img
@@ -56,7 +55,6 @@ class AxisSaveIOC(CaprotoSaveIOC):
             filename = received["filename"]
             data = received["data"]
             # 'frame_number' is not used for this exporter.
-            frame_number = received["frame_number"]  # noqa: F841
             try:
                 save_image(fname=filename, data=data, file_format="jpeg", mode="x")
                 print(f"{now()}: saved data into:\n  {filename}")

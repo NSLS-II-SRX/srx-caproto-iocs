@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 from __future__ import annotations
 
 import textwrap
@@ -162,9 +163,8 @@ class ZebraSaveIOC(CaprotoSaveIOC):
     #     super().__init__(*args, **kwargs)
     #     self._external_pvs = external_pvs
 
-    async def _get_current_dataset(
-        self, *args, **kwargs
-    ):  # , frame, external_pv="enc1"):
+    async def _get_current_dataset(self, *args, **kwargs):  # pylint: disable=unused-argument
+        # , frame, external_pv="enc1"):
         # client_context = Context()
         # (pvobject,) = await client_context.get_pvs(self._external_pvs[external_pv])
         # print(f"{pvobject = }")
@@ -192,7 +192,6 @@ class ZebraSaveIOC(CaprotoSaveIOC):
             filename = received["filename"]
             data = received["data"]
             # 'frame_number' is not used for this exporter.
-            frame_number = received["frame_number"]  # noqa: F841
             try:
                 save_hdf5_zebra(fname=filename, data=data, mode="x")
                 print(f"{now()}: saved data into:\n  {filename}")
