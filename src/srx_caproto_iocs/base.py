@@ -151,6 +151,7 @@ class CaprotoSaveIOC(PVGroup):
 
     @stage.putter
     async def stage(self, *args, **kwargs):
+        """The stage method."""
         return await self._stage(*args, **kwargs)
 
     async def _get_current_dataset(self, frame):
@@ -243,6 +244,11 @@ class OphydDeviceWithCaprotoIOC(Device):
 
     def set(self, command):
         """The set method with values for staging and acquiring."""
+
+        expected_old_value = None
+        expected_new_value = None
+        obj = None
+        cmd = None
 
         # print(f"{now()}: {command = }")
         if command in [StageStates.STAGED.value, "stage"]:
