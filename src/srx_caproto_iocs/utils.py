@@ -15,6 +15,10 @@ def now(as_object=False):
     return _now.isoformat()
 
 
+def save_image(fname, data, file_format="jpeg", mode="x"):
+    data.save(fname, file_format=file_format)
+
+
 def save_hdf5_zebra(
     fname,
     data,
